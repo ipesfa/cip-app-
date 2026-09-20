@@ -4,303 +4,492 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>C.I.P. — Cuestionario de Intereses Profesionales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
+    /* ── TOKENS ── */
     :root {
-      --primary:       #4f46e5;
-      --primary-light: #818cf8;
-      --primary-dark:  #3730a3;
-      --success:       #10b981;
-      --warning:       #f59e0b;
-      --danger:        #ef4444;
-      --bg:            #f1f5f9;
-      --card:          #ffffff;
-      --text:          #1e293b;
-      --muted:         #64748b;
-      --border:        #e2e8f0;
+      --font:    'Plus Jakarta Sans', system-ui, sans-serif;
+      --card:    #ffffff;
+      --text:    #1C1C1E;
+      --muted:   #6B7280;
+      --border:  #E5E7EB;
+      --bg-soft: #F7F7F8;
+      --radius:  22px;
+
+      --primary:       #1C1C1E;
+      --primary-light: #3D3D3D;
+      --primary-pale:  #EBEBEB;
+
+      --d-bg: #FFE8E3; --d-txt: #BF3A2B; --d-border: #FFD0C5;
+      --i-bg: #FFF6D6; --i-txt: #9B7500; --i-border: #FFE89A;
+      --a-bg: #D4F5E8; --a-txt: #0A7A4A; --a-border: #A4E6C8;
+
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger:  #EF4444;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: var(--font);
+      background: #C9CCF0;
+      background-attachment: fixed;
       min-height: 100vh;
+      color: var(--text);
     }
 
-    /* ── HEADER ── */
-    .header {
-      background: linear-gradient(135deg, #1e1b4b 0%, var(--primary-dark) 40%, var(--primary) 70%, var(--primary-light) 100%);
-      color: #fff;
-      padding: 1.75rem 2rem 1.5rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+    /* ── SCREEN ── */
+    .screen { display: none; }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2.5rem 1rem 5rem;
     }
-    .header::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 70% 50%, rgba(129,140,248,.25) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .header h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.5px; position: relative; }
-    .header .sub { font-size: .85rem; opacity: .8; margin-top: .3rem; position: relative; letter-spacing: .3px; }
-
-    /* ── CONTAINER ── */
-    .container { max-width: 780px; margin: 2rem auto; padding: 0 1rem 4rem; }
 
     /* ── CARD ── */
     .card {
       background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 64px rgba(0,0,0,.13), 0 4px 16px rgba(0,0,0,.06);
+      width: 100%;
+      max-width: 460px;
+      overflow: hidden;
+      position: relative;
+    }
+    .card.card-wide { max-width: 640px; }
+
+    /* ── CARD SECTIONS ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .9rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-soft);
+    }
+    .card-badge {
+      background: transparent;
+      color: var(--text);
+      border: 1.5px solid var(--text);
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .5px;
+      padding: .25rem .75rem;
       border-radius: 20px;
-      padding: 2rem 2.25rem;
-      box-shadow: 0 4px 32px rgba(0,0,0,.07);
-      border: 1px solid var(--border);
+    }
+    .card-step {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .card-body  { padding: 1.75rem 1.75rem 1.25rem; }
+    .card-footer {
+      padding: 1rem 1.75rem 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      gap: .75rem;
     }
 
-    /* ── STEP DOTS ── */
-    .step-dots { display: flex; justify-content: center; gap: .5rem; margin-bottom: 1.75rem; }
-    .dot {
-      width: 10px; height: 10px; border-radius: 5px;
-      background: var(--border); transition: all .3s;
+    /* ── THIN PROGRESS BAR (top of card) ── */
+    .prog-bar {
+      height: 3px;
+      background: var(--border);
+      position: absolute;
+      top: 0; left: 0; right: 0;
     }
-    .dot.done  { background: var(--success); }
-    .dot.active { background: var(--primary); width: 28px; }
+    .prog-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width .4s ease;
+      border-radius: 0 2px 2px 0;
+    }
 
-    /* ── MODE SELECTOR ── */
-    .mode-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .9rem; margin: 1.5rem 0; }
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: var(--font);
+      font-size: .84rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      border-radius: 11px;
+      transition: all .15s;
+      padding: .65rem 1.4rem;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.22);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--primary-pale); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    /* ── WELCOME ── */
+    .welcome-icon {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, #1C1C1E, #3D3D3D);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin: 0 auto 1rem;
+    }
+    .welcome-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.35;
+      margin-bottom: .55rem;
+    }
+    .welcome-desc {
+      font-size: .83rem;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .section-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .7rem;
+    }
+
+    /* ── MODE GRID ── */
+    .mode-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .6rem; margin-bottom: 1.25rem; }
     .mode-card {
-      border: 2px solid var(--border); border-radius: 14px;
-      padding: 1.25rem 1rem; cursor: pointer;
-      transition: all .2s; text-align: center; background: #fafafa;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem .6rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+      background: var(--bg-soft);
     }
-    .mode-card:hover { border-color: var(--primary-light); background: #f5f3ff; transform: translateY(-2px); }
-    .mode-card.sel   { border-color: var(--primary); background: #ede9fe; }
-    .mode-card .num  { font-size: 2.2rem; font-weight: 800; color: var(--primary); line-height: 1; }
-    .mode-card .lbl  { font-size: .75rem; color: var(--muted); margin-top: .2rem; font-weight: 600; }
-    .mode-card .desc { font-size: .7rem; color: var(--muted); margin-top: .5rem; line-height: 1.4; }
+    .mode-card:hover { border-color: #1C1C1E; background: #F0F0F0; transform: translateY(-2px); }
+    .mode-card.sel   { border-color: var(--primary); background: var(--primary-pale); }
+    .mode-card .num  { font-size: 1.75rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .mode-card .lbl  { font-size: .65rem; font-weight: 700; color: var(--muted); margin-top: .15rem; }
+    .mode-card .dur  { font-size: .6rem; color: #9CA3AF; margin-top: .4rem; line-height: 1.3; }
 
-    /* ── BIBLIO NOTE ── */
+    /* ── BIBLIO ── */
     .biblio {
-      background: #f0f9ff; border: 1px solid #bae6fd;
-      border-radius: 10px; padding: 1rem 1.25rem;
-      font-size: .78rem; color: #0369a1; margin-top: 1.5rem; line-height: 1.6;
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      border-radius: 11px;
+      padding: .85rem 1.1rem;
+      font-size: .71rem;
+      color: #0369A1;
+      line-height: 1.65;
     }
-    .biblio strong { display: block; margin-bottom: .25rem; font-size: .8rem; }
+    .biblio strong { display: block; font-weight: 700; margin-bottom: .2rem; font-size: .73rem; }
+
+    /* ── STEP PIPS (data screen) ── */
+    .step-pips {
+      display: flex;
+      gap: .4rem;
+      margin-bottom: 1.4rem;
+    }
+    .pip {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .pip.done   { background: var(--success); }
+    .pip.active { background: var(--primary); }
 
     /* ── FORM ── */
-    .form-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group { margin-bottom: 1.1rem; }
-    label { display: block; font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: .4rem; }
+    .form-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 1.25rem; }
+    .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .form-group { margin-bottom: .85rem; }
+    label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: .35rem;
+    }
     input, select {
-      width: 100%; padding: .7rem 1rem;
-      border: 1.5px solid var(--border); border-radius: 9px;
-      font-size: .92rem; font-family: inherit; color: var(--text);
-      background: #fafafa; transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+      padding: .65rem .95rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: .88rem;
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg-soft);
+      transition: border-color .15s, box-shadow .15s;
     }
     input:focus, select:focus {
-      outline: none; border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79,70,229,.12); background: #fff;
-    }
-
-    /* ── PROGRESS ── */
-    .progress-wrap { margin-bottom: 1.75rem; }
-    .progress-meta { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
-    .progress-track { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
-    .progress-fill  {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--primary-light));
-      border-radius: 4px; transition: width .4s ease;
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,0,0,.08);
+      background: #fff;
     }
 
     /* ── QUESTION ── */
-    .q-label { font-size: .72rem; font-weight: 700; color: var(--primary); letter-spacing: .8px; text-transform: uppercase; margin-bottom: .75rem; }
-    .q-text  { font-size: 1.3rem; font-weight: 500; line-height: 1.55; margin-bottom: 2rem; color: var(--text); }
+    .q-number {
+      font-size: .67rem;
+      font-weight: 700;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: .75rem;
+    }
+    .q-text {
+      font-size: 1.12rem;
+      font-weight: 600;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 1.75rem;
+    }
 
-    /* ── DIA BUTTONS ── */
-    .dia-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+    /* ── D / I / A BUTTONS ── */
+    .dia-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .65rem; }
     .dia-btn {
-      padding: 1.4rem .5rem; border: 2.5px solid var(--border);
-      border-radius: 14px; background: #fafafa;
-      cursor: pointer; transition: all .18s;
-      display: flex; flex-direction: column; align-items: center; gap: .5rem;
-      font-family: inherit;
-    }
-    .dia-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.1); }
-    .dia-btn .big  { font-size: 2.2rem; font-weight: 800; line-height: 1; }
-    .dia-btn .sm   { font-size: .72rem; font-weight: 600; color: var(--muted); }
-
-    .dia-btn.d-btn { border-color: #fca5a5; }
-    .dia-btn.d-btn:hover,.dia-btn.d-btn.sel { background: #fff1f2; border-color: var(--danger); }
-    .dia-btn.d-btn .big { color: var(--danger); }
-
-    .dia-btn.i-btn { border-color: #fde68a; }
-    .dia-btn.i-btn:hover,.dia-btn.i-btn.sel { background: #fffbeb; border-color: var(--warning); }
-    .dia-btn.i-btn .big { color: var(--warning); }
-
-    .dia-btn.a-btn { border-color: #6ee7b7; }
-    .dia-btn.a-btn:hover,.dia-btn.a-btn.sel { background: #ecfdf5; border-color: var(--success); }
-    .dia-btn.a-btn .big { color: var(--success); }
-
-    .dia-btn.sel { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,.1); }
-
-    /* ── NAV BUTTONS ── */
-    .nav { display: flex; justify-content: space-between; margin-top: 2rem; gap: 1rem; }
-    .btn {
-      padding: .7rem 1.75rem; border-radius: 10px; border: none;
-      font-size: .92rem; font-weight: 700; cursor: pointer;
-      transition: all .18s; font-family: inherit;
-    }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover  { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(79,70,229,.35); }
-    .btn-secondary { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
-    .btn-secondary:hover { background: var(--border); }
-    .btn:disabled { opacity: .38; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-
-    /* ── ANSWER DOTS OVERVIEW ── */
-    #dot-overview { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 1.25rem; max-width: 620px; margin-left: auto; margin-right: auto; }
-    .adot {
-      width: 13px; height: 13px; border-radius: 50%;
-      background: var(--border); cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .45rem;
+      padding: 1.1rem .5rem .9rem;
+      border-radius: 14px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-family: var(--font);
       transition: all .15s;
     }
-    .adot:hover { transform: scale(1.3); }
-    .adot.cur   { outline: 2.5px solid var(--primary); outline-offset: 2px; }
-    .adot.d-col { background: var(--danger); }
-    .adot.i-col { background: var(--warning); }
-    .adot.a-col { background: var(--success); }
+    .dia-btn .emoji  { font-size: 1.65rem; line-height: 1; }
+    .dia-btn .letter { font-size: .95rem; font-weight: 800; }
+    .dia-btn .lbl    { font-size: .62rem; font-weight: 600; }
+
+    .dia-btn.d-btn { background: var(--d-bg); border-color: var(--d-border); color: var(--d-txt); }
+    .dia-btn.i-btn { background: var(--i-bg); border-color: var(--i-border); color: var(--i-txt); }
+    .dia-btn.a-btn { background: var(--a-bg); border-color: var(--a-border); color: var(--a-txt); }
+
+    .dia-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.1);
+    }
+    .dia-btn.d-btn.sel { box-shadow: 0 0 0 3px var(--d-txt); transform: translateY(-3px); }
+    .dia-btn.i-btn.sel { box-shadow: 0 0 0 3px var(--i-txt); transform: translateY(-3px); }
+    .dia-btn.a-btn.sel { box-shadow: 0 0 0 3px var(--a-txt); transform: translateY(-3px); }
+
+    /* ── PROGRESS COUNTER ── */
+    .pct-counter {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--muted);
+      min-width: 36px;
+      text-align: center;
+    }
+
+    /* ── DOT OVERVIEW ── */
+    #dot-overview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+      margin-top: .9rem;
+      max-width: 460px;
+      width: 100%;
+      padding: 0 .25rem;
+    }
+    .adot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.55);
+      cursor: pointer;
+      transition: all .12s;
+      border: 1.5px solid rgba(255,255,255,.75);
+    }
+    .adot:hover { transform: scale(1.45); }
+    .adot.cur   { outline: 2.5px solid #fff; outline-offset: 2px; }
+    .adot.d-col { background: var(--danger);  border-color: var(--danger); }
+    .adot.i-col { background: var(--warning); border-color: var(--warning); }
+    .adot.a-col { background: var(--success); border-color: var(--success); }
 
     /* ── RESULTS ── */
-    .res-title { font-size: 1.5rem; font-weight: 800; margin-bottom: .3rem; }
-    .res-sub   { font-size: .85rem; color: var(--muted); margin-bottom: 1.75rem; }
+    .res-hero {
+      background: linear-gradient(135deg, #111827, #1C1C1E);
+      padding: 1.6rem 1.75rem 1.4rem;
+      color: #fff;
+    }
+    .res-hero h2   { font-size: 1.25rem; font-weight: 800; }
+    .res-hero .sub { font-size: .8rem; opacity: .75; margin-top: .3rem; }
 
     .top-box {
-      background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-      border-radius: 14px; padding: 1.25rem 1.5rem; margin-top: 1.5rem;
+      background: var(--primary-pale);
+      border: 1px solid #DDD6FE;
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1.5rem;
     }
-    .top-box h3 { font-size: .85rem; font-weight: 800; color: var(--primary-dark); margin-bottom: .75rem; }
-    .top-item {
-      display: flex; align-items: center; gap: .75rem;
-      padding: .45rem 0; border-bottom: 1px solid rgba(109,40,217,.1);
+    .top-box h3 {
+      font-size: .67rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: .75rem;
     }
+    .top-item { display: flex; align-items: center; gap: .7rem; padding: .4rem 0; border-bottom: 1px solid rgba(109,40,217,.12); }
     .top-item:last-child { border-bottom: none; }
     .top-rank {
-      width: 26px; height: 26px; border-radius: 50%;
-      background: var(--primary); color: #fff;
-      font-size: .72rem; font-weight: 800;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    .top-name { font-size: .88rem; font-weight: 600; }
-    .top-pct  { margin-left: auto; font-size: .88rem; font-weight: 800; color: var(--primary); }
+    .top-name { font-size: .84rem; font-weight: 600; }
+    .top-pct  { margin-left: auto; font-size: .84rem; font-weight: 800; color: var(--primary); }
 
-    .scale-bars { display: flex; flex-direction: column; gap: .7rem; margin-top: 1.75rem; }
-    .sb-row { display: flex; align-items: center; gap: .9rem; }
-    .sb-label { width: 185px; font-size: .74rem; font-weight: 600; text-align: right; flex-shrink: 0; color: var(--text); }
-    .sb-track { flex: 1; height: 22px; background: var(--bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-    .sb-fill  { height: 100%; border-radius: 6px; min-width: 4px; transition: width 1.1s cubic-bezier(.4,0,.2,1); }
-    .sb-val   { width: 42px; font-size: .76rem; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+    .chart-wrap { position: relative; height: 380px; margin: 1rem 0 1.5rem; }
 
-    .chart-wrap { position: relative; height: 420px; margin: 1.5rem 0; }
+    .scale-bars { display: flex; flex-direction: column; gap: .55rem; }
+    .sb-row     { display: flex; align-items: center; gap: .8rem; }
+    .sb-label   { width: 175px; font-size: .68rem; font-weight: 600; text-align: right; flex-shrink: 0; }
+    .sb-track   { flex: 1; height: 20px; background: var(--bg-soft); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .sb-fill    { height: 100%; border-radius: 6px; min-width: 3px; transition: width 1.1s cubic-bezier(.4,0,.2,1); }
+    .sb-val     { width: 36px; font-size: .7rem; font-weight: 700; color: var(--muted); flex-shrink: 0; }
 
-    .action-row { display: flex; gap: .9rem; flex-wrap: wrap; margin-top: 1.75rem; }
-
-    /* ── SCREEN MGMT ── */
-    .screen { display: none; }
-    .screen.active { display: block; }
+    .res-note {
+      background: #F0F9FF;
+      border: 1px solid #BAE6FD;
+      border-radius: 11px;
+      padding: .85rem 1.1rem;
+      font-size: .71rem;
+      color: #0369A1;
+      line-height: 1.65;
+      margin-top: 1.4rem;
+    }
+    .res-note strong { font-weight: 700; }
+    .action-row { display: flex; gap: .7rem; flex-wrap: wrap; }
 
     /* ── PRINT ── */
     @media print {
-      .header, .action-row, #dot-overview, .nav { display: none; }
+      body { background: white; }
+      .card-footer, #dot-overview, .action-row { display: none; }
       .card { box-shadow: none; border: 1px solid #ddd; }
-      .chart-wrap { height: 320px; }
+      .chart-wrap { height: 300px; }
     }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 560px) {
-      .form-row   { grid-template-columns: 1fr; }
-      .mode-grid  { grid-template-columns: 1fr; }
-      .sb-label   { width: 110px; font-size: .66rem; }
-      .header h1  { font-size: 1.25rem; }
-      .card       { padding: 1.5rem 1.25rem; }
+    @media (max-width: 500px) {
+      .form-row  { grid-template-columns: 1fr; }
+      .sb-label  { width: 105px; font-size: .6rem; }
+      .card-body { padding: 1.4rem 1.25rem 1rem; }
+      .card-footer { padding: .85rem 1.25rem 1.1rem; }
+      .q-text { font-size: 1rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>Cuestionario de Intereses Profesionales</h1>
-  <div class="sub">IPES fa</div>
-</div>
+<!-- ════════════════ PANTALLA 1: BIENVENIDA ════════════════ -->
+<div id="s-welcome" class="screen active">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-badge">IPESfa</span>
+      <span class="card-step">Inicio</span>
+    </div>
+    <div class="card-body">
+      <div class="welcome-icon">&#127919;</div>
+      <div class="welcome-title">Cuestionario de<br>Intereses Profesionales</div>
+      <div class="welcome-desc">
+        Descubr&iacute; tus &aacute;reas de mayor inter&eacute;s vocacional en 15 campos del conocimiento.
+        No hay respuestas correctas: respond&eacute; con sinceridad indicando si cada actividad
+        te produce <strong>Desagrado</strong>, <strong>Indiferencia</strong> o <strong>Agrado</strong>.
+      </div>
 
-<div class="container">
-
-  <!-- ════════════════ PANTALLA 1: BIENVENIDA ════════════════ -->
-  <div id="s-welcome" class="screen active">
-    <div class="card">
-      <h2 style="font-size:1.35rem;font-weight:800;margin-bottom:.5rem;">Bienvenido/a</h2>
-      <p style="color:var(--muted);font-size:.9rem;line-height:1.65;margin-bottom:1.5rem;">
-        Este cuestionario registra tus <strong>intereses vocacionales</strong> en 15 &aacute;reas del conocimiento.
-        No hay respuestas correctas o incorrectas: respond&eacute; con sinceridad seg&uacute;n tus preferencias reales.
-        Para cada actividad indic&aacute; si te produce <strong>Desagrado (D)</strong>, <strong>Indiferencia (I)</strong> o <strong>Agrado (A)</strong>.
-      </p>
-
-      <p style="font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:.6rem;">
-        &iquest;Cu&aacute;ntas preguntas quer&eacute;s responder?
-      </p>
+      <div class="section-label">&iquest;Cu&aacute;ntas preguntas quer&eacute;s responder?</div>
 
       <div class="mode-grid">
         <div class="mode-card sel" onclick="selMode(30,this)">
           <div class="num">30</div>
           <div class="lbl">preguntas</div>
-          <div class="desc">2 por escala<br>~10 min</div>
+          <div class="dur">2 por escala<br>~10 min</div>
         </div>
         <div class="mode-card" onclick="selMode(45,this)">
           <div class="num">45</div>
           <div class="lbl">preguntas</div>
-          <div class="desc">3 por escala<br>~15 min</div>
+          <div class="dur">3 por escala<br>~15 min</div>
         </div>
         <div class="mode-card" onclick="selMode(150,this)">
           <div class="num">150</div>
           <div class="lbl">preguntas</div>
-          <div class="desc">Versi&oacute;n completa<br>~40 min</div>
+          <div class="dur">Versi&oacute;n completa<br>~40 min</div>
         </div>
       </div>
 
       <div class="biblio">
         <strong>Referencia bibliogr&aacute;fica</strong>
-        Fogliatto, H. M. (1991). <em>Cuestionario de Intereses Profesionales (C.I.P.)</em>, 2.&ordf; edici&oacute;n.
-        Universidad Nacional de C&oacute;rdoba. Mide intereses en 15 escalas mediante actividades
-        profesionales y acad&eacute;micas. Las respuestas se puntuan como D=1, I=2, A=3.
-        Baremos disponibles para estudiantes secundarios y universitarios de C&oacute;rdoba (Fogliatto, 1991).
-      </div>
-
-      <div style="margin-top:1.75rem;text-align:right;">
-        <button class="btn btn-primary" onclick="show('s-data')">Continuar &rarr;</button>
+        Fogliatto, H. M. (1991). <em>Cuestionario de Intereses Profesionales (C.I.P.)</em>, 2.&ordf; ed.
+        Universidad Nacional de C&oacute;rdoba. Mide intereses en 15 escalas (D=1, I=2, A=3).
+        Baremos disponibles para estudiantes secundarios y universitarios de C&oacute;rdoba.
       </div>
     </div>
+    <div class="card-footer" style="justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="show('s-data')">Continuar &rarr;</button>
+    </div>
   </div>
+</div>
 
-  <!-- ════════════════ PANTALLA 2: DATOS PERSONALES ════════════════ -->
-  <div id="s-data" class="screen">
-    <div class="card">
-      <div class="step-dots">
-        <div class="dot done"></div>
-        <div class="dot active"></div>
-        <div class="dot"></div>
+<!-- ════════════════ PANTALLA 2: DATOS PERSONALES ════════════════ -->
+<div id="s-data" class="screen">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-badge">IPESfa</span>
+      <span class="card-step">Paso 2 de 3</span>
+    </div>
+    <div class="card-body">
+      <div class="step-pips">
+        <div class="pip done"></div>
+        <div class="pip active"></div>
+        <div class="pip"></div>
       </div>
 
-      <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:1.5rem;">Datos personales</h2>
+      <div class="form-title">Tus datos personales</div>
 
       <div class="form-row">
         <div class="form-group">
           <label>Apellido y Nombre *</label>
-          <input type="text" id="f-nombre" placeholder="Ej: Garc&iacute;a, Juan">
+          <input type="text" id="f-nombre" placeholder="Garc&iacute;a, Juan">
         </div>
         <div class="form-group">
           <label>Edad *</label>
-          <input type="number" id="f-edad" placeholder="Ej: 17" min="14" max="70">
+          <input type="number" id="f-edad" placeholder="17" min="14" max="70">
         </div>
       </div>
 
@@ -311,12 +500,12 @@
             <option value="">Seleccionar&hellip;</option>
             <option value="M">Masculino</option>
             <option value="F">Femenino</option>
-            <option value="O">Otro / Prefiero no decir</option>
+            <option value="O">Otro / No especificar</option>
           </select>
         </div>
         <div class="form-group">
           <label>Ciudad</label>
-          <input type="text" id="f-ciudad" placeholder="Ej: C&oacute;rdoba">
+          <input type="text" id="f-ciudad" placeholder="C&oacute;rdoba">
         </div>
       </div>
 
@@ -332,100 +521,100 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Carrera de inter&eacute;s (opcional)</label>
-          <input type="text" id="f-carrera" placeholder="Ej: Psicolog&iacute;a, Ingenier&iacute;a&hellip;">
+          <label>Carrera de inter&eacute;s</label>
+          <input type="text" id="f-carrera" placeholder="Psicolog&iacute;a&hellip;">
         </div>
-      </div>
-
-      <div class="nav">
-        <button class="btn btn-secondary" onclick="show('s-welcome')">&larr; Atr&aacute;s</button>
-        <button class="btn btn-primary" onclick="startTest()">Comenzar test &rarr;</button>
       </div>
     </div>
+    <div class="card-footer">
+      <button class="btn btn-ghost" onclick="show('s-welcome')">&larr; Atr&aacute;s</button>
+      <button class="btn btn-primary" onclick="startTest()">Comenzar test &rarr;</button>
+    </div>
   </div>
+</div>
 
-  <!-- ════════════════ PANTALLA 3: PREGUNTAS ════════════════ -->
-  <div id="s-questions" class="screen">
-    <div class="card">
-      <div class="progress-wrap">
-        <div class="progress-meta">
-          <span id="p-label">Pregunta 1 de 30</span>
-          <span id="p-pct">0%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="p-fill" style="width:0%"></div>
-        </div>
-      </div>
-
-      <div class="q-label" id="q-lbl">PREGUNTA 1</div>
-      <div class="q-text"  id="q-txt">Cargando&hellip;</div>
+<!-- ════════════════ PANTALLA 3: PREGUNTAS ════════════════ -->
+<div id="s-questions" class="screen">
+  <div class="card">
+    <div class="prog-bar">
+      <div class="prog-bar-fill" id="p-fill" style="width:0%"></div>
+    </div>
+    <div class="card-header">
+      <span class="card-badge">IPESfa</span>
+      <span class="card-step" id="p-label">Pregunta 1 de 30</span>
+    </div>
+    <div class="card-body">
+      <div class="q-number" id="q-lbl">PREGUNTA 1</div>
+      <div class="q-text" id="q-txt">Cargando&hellip;</div>
 
       <div class="dia-grid">
         <button class="dia-btn d-btn" onclick="pick('D')">
-          <span class="big">D</span>
-          <span class="sm">Desagrado</span>
+          <span class="emoji">&#129700;</span>
+          <span class="letter">D</span>
+          <span class="lbl">Desagrado</span>
         </button>
         <button class="dia-btn i-btn" onclick="pick('I')">
-          <span class="big">I</span>
-          <span class="sm">Indiferencia</span>
+          <span class="emoji">&#128566;</span>
+          <span class="letter">I</span>
+          <span class="lbl">Indiferencia</span>
         </button>
         <button class="dia-btn a-btn" onclick="pick('A')">
-          <span class="big">A</span>
-          <span class="sm">Agrado</span>
+          <span class="emoji">&#128578;</span>
+          <span class="letter">A</span>
+          <span class="lbl">Agrado</span>
         </button>
       </div>
-
-      <div class="nav">
-        <button class="btn btn-secondary" id="btn-prev" onclick="prevQ()" disabled>&larr; Anterior</button>
-        <button class="btn btn-primary"   id="btn-next" onclick="nextQ()">Siguiente &rarr;</button>
-      </div>
     </div>
-
-    <div id="dot-overview"></div>
+    <div class="card-footer">
+      <button class="btn btn-ghost" id="btn-prev" onclick="prevQ()" disabled>&larr; Anterior</button>
+      <span class="pct-counter" id="p-pct">0%</span>
+      <button class="btn btn-primary" id="btn-next" onclick="nextQ()">Siguiente &rarr;</button>
+    </div>
   </div>
 
-  <!-- ════════════════ PANTALLA 4: RESULTADOS ════════════════ -->
-  <div id="s-results" class="screen">
-    <div class="card">
-      <div class="step-dots">
-        <div class="dot done"></div>
-        <div class="dot done"></div>
-        <div class="dot active"></div>
-      </div>
+  <div id="dot-overview"></div>
+</div>
 
-      <div class="res-title">Perfil de Intereses</div>
-      <div class="res-sub" id="r-sub">—</div>
+<!-- ════════════════ PANTALLA 4: RESULTADOS ════════════════ -->
+<div id="s-results" class="screen">
+  <div class="card card-wide">
+    <div class="res-hero">
+      <h2>Perfil de Intereses</h2>
+      <div class="sub" id="r-sub">&mdash;</div>
+    </div>
+    <div class="card-body">
+      <div id="r-top"></div>
 
       <div class="chart-wrap">
         <canvas id="radarChart"></canvas>
       </div>
 
-      <div id="r-top"></div>
-
       <div class="scale-bars" id="r-bars"></div>
 
-      <div class="biblio" style="margin-top:1.75rem;">
+      <div class="res-note">
         <strong>Nota de interpretaci&oacute;n</strong>
-        El porcentaje indica el nivel de agrado relativo en cada &aacute;rea (0% = todo desagrado, 100% = todo agrado).
-        Se recomienda analizar las 2&ndash;3 escalas m&aacute;s altas como posibles orientaciones vocacionales,
-        consider&aacute;ndolas junto a habilidades, valores y contexto socioecon&oacute;mico.
-        Para la versi&oacute;n completa (150 &iacute;tems) pueden aplicarse los baremos normativos de Fogliatto (1991).
+        El porcentaje indica el nivel de agrado relativo en cada &aacute;rea
+        (0% = todo desagrado, 100% = todo agrado). Se recomienda analizar las 2&ndash;3 escalas
+        m&aacute;s altas como posibles orientaciones vocacionales, considerando tambi&eacute;n habilidades,
+        valores y contexto. Para la versi&oacute;n completa (150 &iacute;tems) pueden aplicarse los
+        baremos normativos de Fogliatto (1991).
         <br><br>
-        <strong>Fuente:</strong> Fogliatto, H. M. (1991). <em>Cuestionario de Intereses Profesionales (C.I.P.)</em>, 2.&ordf; ed. Universidad Nacional de C&oacute;rdoba. &mdash; Cuestionario Desiderativo Vocacional: adaptaci&oacute;n de Hern&aacute;ndez, H.
+        <strong>Fuente:</strong> Fogliatto, H. M. (1991). <em>C.I.P.</em>, 2.&ordf; ed.
+        Universidad Nacional de C&oacute;rdoba.
       </div>
-
+    </div>
+    <div class="card-footer">
       <div class="action-row">
-        <button class="btn btn-primary"   onclick="resetAll()">Nuevo cuestionario</button>
-        <button class="btn btn-secondary" onclick="window.print()">Imprimir / PDF</button>
+        <button class="btn btn-primary"  onclick="resetAll()">Nuevo cuestionario</button>
+        <button class="btn btn-outline" onclick="window.print()">Imprimir / PDF</button>
       </div>
     </div>
   </div>
-
-</div><!-- /container -->
+</div>
 
 <script>
 // ══════════════════════════════════════════════
-//  BANCO DE PREGUNTAS — 150 ítems C.I.P.
+//  BANCO DE PREGUNTAS — 150 items C.I.P.
 // ══════════════════════════════════════════════
 const ITEMS = [
   {n:1,  t:"Conocer estilos de pintura contemporánea."},
@@ -581,7 +770,7 @@ const ITEMS = [
 ];
 
 // ══════════════════════════════════════════════
-//  ESCALAS Y SUS ÍTEMS (Fogliatto, 1991)
+//  ESCALAS Y SUS ITEMS (Fogliatto, 1991)
 // ══════════════════════════════════════════════
 const SCALES = [
   {id:'I',   name:'Cálculo',                 items:[4,17,26,62,111,114,135,144,146]},
@@ -601,7 +790,6 @@ const SCALES = [
   {id:'XV',  name:'Lenguas Extranjeras',     items:[33,43,47,59,66,69,93,103]},
 ];
 
-// Selección para versiones cortas (2 y 3 ítems por escala)
 const SHORT = {
   30: [4,17, 12,29, 7,14, 11,18, 15,37, 8,30, 9,24, 21,38, 3,6, 13,55, 19,25, 28,32, 1,5, 2,50, 33,43],
   45: [4,17,26, 12,29,44, 7,14,16, 11,18,23, 15,37,54, 8,30,39, 9,24,34, 21,38,92, 3,6,22, 13,55,60, 19,25,35, 28,32,36, 1,5,10, 2,50,70, 33,43,47],
@@ -613,15 +801,15 @@ const COLORS = [
   '#3b82f6','#14b8a6','#f97316','#a855f7','#6366f1',
 ];
 
-// ── Estado ──
-let mode     = 30;
-let qList    = [];   // array of item numbers in order
-let idx      = 0;
-let answers  = {};   // { n: 'D'|'I'|'A' }
-let user     = {};
-let chart    = null;
+// Estado
+let mode    = 30;
+let qList   = [];
+let idx     = 0;
+let answers = {};
+let user    = {};
+let chart   = null;
 
-// ── Utils ──
+// Utils
 const byN = n => ITEMS.find(i => i.n === n);
 const show = id => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -629,14 +817,14 @@ const show = id => {
   window.scrollTo(0, 0);
 };
 
-// ── Mode selection ──
+// Mode selection
 function selMode(m, el) {
   mode = m;
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
 }
 
-// ── Start test ──
+// Start test
 function startTest() {
   const nombre = document.getElementById('f-nombre').value.trim();
   const edad   = document.getElementById('f-edad').value.trim();
@@ -660,7 +848,7 @@ function startTest() {
   renderDots();
 }
 
-// ── Render question ──
+// Render question
 function renderQ() {
   const n     = qList[idx];
   const q     = byN(n);
@@ -668,12 +856,11 @@ function renderQ() {
   const pct   = Math.round((idx / total) * 100);
 
   document.getElementById('q-lbl').textContent = `Pregunta ${idx+1} de ${total}`;
-  document.getElementById('q-txt').textContent = `${n}. ${q.t}`;
+  document.getElementById('q-txt').textContent = `${q.t}`;
   document.getElementById('p-label').textContent = `Pregunta ${idx+1} de ${total}`;
   document.getElementById('p-pct').textContent   = `${pct}%`;
   document.getElementById('p-fill').style.width  = `${pct}%`;
 
-  // Highlight selected
   document.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('sel'));
   if (answers[n]) {
     const map = { D:0, I:1, A:2 };
@@ -685,7 +872,7 @@ function renderQ() {
     idx === total - 1 ? 'Ver resultados →' : 'Siguiente →';
 }
 
-// ── Pick answer ──
+// Pick answer
 function pick(val) {
   const n = qList[idx];
   answers[n] = val;
@@ -696,7 +883,6 @@ function pick(val) {
 
   renderDots();
 
-  // Auto-avanzar después de 450ms
   setTimeout(() => {
     if (idx < qList.length - 1) {
       idx++;
@@ -705,7 +891,7 @@ function pick(val) {
   }, 450);
 }
 
-// ── Navigation ──
+// Navigation
 function nextQ() {
   if (!answers[qList[idx]]) {
     if (!confirm('No respondiste esta pregunta. ¿Continuar de todos modos?')) return;
@@ -718,7 +904,7 @@ function prevQ() {
   if (idx > 0) { idx--; renderQ(); }
 }
 
-// ── Answer dots ──
+// Dot overview
 function renderDots() {
   const cmap = { D:'d-col', I:'i-col', A:'a-col' };
   const wrap = document.getElementById('dot-overview');
@@ -732,21 +918,21 @@ function renderDots() {
   });
 }
 
-// ── Score ──
+// Score calculation
 function calcScores() {
   const vm = { D:1, I:2, A:3 };
   return SCALES.map((sc, si) => {
     const sel = sc.items.filter(n => qList.includes(n));
     if (!sel.length) return { ...sc, pct:0, raw:0, max:0, color:COLORS[si] };
     const raw = sel.reduce((s, n) => s + (vm[answers[n]] || 1), 0);
-    const min = sel.length;      // all D
-    const max = sel.length * 3;  // all A
+    const min = sel.length;
+    const max = sel.length * 3;
     const pct = Math.round(((raw - min) / (max - min)) * 100);
     return { ...sc, pct: Math.max(0, pct), raw, max, color: COLORS[si] };
   });
 }
 
-// ── Results ──
+// Show results
 function showResults() {
   const scores = calcScores();
   show('s-results');
@@ -754,11 +940,10 @@ function showResults() {
   document.getElementById('r-sub').textContent =
     `${user.nombre}  ·  ${user.edad} años  ·  ${new Date().toLocaleDateString('es-AR')}`;
 
-  // Top 3
   const top3 = [...scores].sort((a,b) => b.pct - a.pct).slice(0, 3);
   document.getElementById('r-top').innerHTML = `
     <div class="top-box">
-      <h3>Areas de mayor interés</h3>
+      <h3>Areas de mayor interes</h3>
       ${top3.map((s,i) => `
         <div class="top-item">
           <div class="top-rank">${i+1}</div>
@@ -767,7 +952,6 @@ function showResults() {
         </div>`).join('')}
     </div>`;
 
-  // Bar chart
   document.getElementById('r-bars').innerHTML = scores.map(s => `
     <div class="sb-row">
       <div class="sb-label">${s.id}. ${s.name}</div>
@@ -777,7 +961,6 @@ function showResults() {
       <div class="sb-val">${s.pct}%</div>
     </div>`).join('');
 
-  // Radar
   if (chart) chart.destroy();
   const ctx = document.getElementById('radarChart').getContext('2d');
   chart = new Chart(ctx, {
@@ -787,8 +970,8 @@ function showResults() {
       datasets: [{
         label: 'Interés (%)',
         data: scores.map(s => s.pct),
-        backgroundColor: 'rgba(79,70,229,.15)',
-        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(28,28,30,.08)',
+        borderColor: '#1C1C1E',
         pointBackgroundColor: scores.map(s => s.color),
         pointBorderColor: '#fff',
         pointRadius: 5,
@@ -802,10 +985,10 @@ function showResults() {
       scales: {
         r: {
           min: 0, max: 100,
-          ticks: { stepSize: 25, font: { size: 9 }, color: '#64748b' },
-          pointLabels: { font: { size: 10 }, color: '#1e293b' },
-          grid: { color: '#e2e8f0' },
-          angleLines: { color: '#e2e8f0' },
+          ticks: { stepSize: 25, font: { size: 9 }, color: '#9CA3AF' },
+          pointLabels: { font: { size: 10, family: "'Plus Jakarta Sans', sans-serif" }, color: '#374151' },
+          grid: { color: '#E5E7EB' },
+          angleLines: { color: '#E5E7EB' },
         }
       },
       plugins: {
@@ -815,13 +998,12 @@ function showResults() {
     }
   });
 
-  // Save to localStorage
   const saved = JSON.parse(localStorage.getItem('cip_responses') || '[]');
   saved.push({ fecha: new Date().toISOString(), datos: user, modo: mode, respuestas: answers, puntajes: scores });
   localStorage.setItem('cip_responses', JSON.stringify(saved));
 }
 
-// ── Reset ──
+// Reset
 function resetAll() {
   answers = {}; user = {}; idx = 0;
   ['f-nombre','f-edad','f-ciudad','f-carrera'].forEach(id => document.getElementById(id).value = '');
