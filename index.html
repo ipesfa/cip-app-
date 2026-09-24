@@ -396,6 +396,51 @@
     .res-note strong { font-weight: 700; }
     .action-row { display: flex; gap: .7rem; flex-wrap: wrap; }
 
+    /* ── IPESFA SUGERENCIAS ── */
+    .ipesfa-box {
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      border-radius: 14px;
+      padding: 1.1rem 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .ipesfa-box h3 {
+      font-size: .67rem;
+      font-weight: 800;
+      color: #166534;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: .75rem;
+    }
+    .ipesfa-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .45rem 0;
+      border-bottom: 1px solid rgba(22,101,52,.1);
+    }
+    .ipesfa-item:last-child { border-bottom: none; }
+    .ipesfa-code {
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .5px;
+      color: #166534;
+      background: #DCFCE7;
+      border: 1px solid #86EFAC;
+      border-radius: 6px;
+      padding: .2rem .55rem;
+      flex-shrink: 0;
+      min-width: 42px;
+      text-align: center;
+    }
+    .ipesfa-name { font-size: .84rem; font-weight: 600; }
+    .ipesfa-via  { margin-left: auto; font-size: .65rem; color: #6B7280; font-style: italic; white-space: nowrap; }
+    .ipesfa-none {
+      font-size: .78rem;
+      color: #6B7280;
+      font-style: italic;
+    }
+
     /* ── PRINT ── */
     @media print {
       body { background: white; }
@@ -639,6 +684,7 @@
     </div>
     <div class="card-body">
       <div id="r-top"></div>
+      <div id="r-ipesfa"></div>
 
       <div class="chart-wrap">
         <canvas id="radarChart"></canvas>
@@ -850,6 +896,32 @@ const SHORT = {
   45: [4,17,26, 12,29,44, 7,14,16, 11,18,23, 15,37,54, 8,30,39, 9,24,34, 21,38,92, 3,6,22, 13,55,60, 19,25,35, 28,32,36, 1,5,10, 2,50,70, 33,43,47],
 };
 
+// Carreras IPESfa por escala CIP
+const IPESFA_MAP = {
+  'I':    [{ code:'MAT', name:'Prof. de Matemática' }],
+  'II':   [{ code:'BIO', name:'Prof. de Biología' }],
+  'III':  [],
+  'IV':   [],
+  'V':    [{ code:'GEO', name:'Prof. de Geografía' }],
+  'VI':   [{ code:'BIO', name:'Prof. de Biología' }],
+  'VII':  [{ code:'BIO', name:'Prof. de Biología' }],
+  'VIII': [
+    { code:'PEI', name:'Prof. de Educación Inicial' },
+    { code:'PEP', name:'Prof. de Educación Primaria' },
+    { code:'PEE', name:'Prof. de Educación Especial' },
+  ],
+  'IX':   [{ code:'HIS', name:'Prof. de Historia' }],
+  'X':    [],
+  'XI':   [{ code:'LYL', name:'Prof. de Lengua y Literatura' }],
+  'XII':  [
+    { code:'HIS', name:'Prof. de Historia' },
+    { code:'LYL', name:'Prof. de Lengua y Literatura' },
+  ],
+  'XIII': [],
+  'XIV':  [],
+  'XV':   [{ code:'ING', name:'Prof. de Inglés' }],
+};
+
 const COLORS = [
   '#4f46e5','#7c3aed','#0ea5e9','#06b6d4','#10b981',
   '#84cc16','#f59e0b','#ef4444','#ec4899','#8b5cf6',
@@ -998,13 +1070,38 @@ function showResults() {
   const top3 = [...scores].sort((a,b) => b.pct - a.pct).slice(0, 3);
   document.getElementById('r-top').innerHTML = `
     <div class="top-box">
-      <h3>Areas de mayor interes</h3>
+      <h3>Áreas de mayor interés</h3>
       ${top3.map((s,i) => `
         <div class="top-item">
           <div class="top-rank">${i+1}</div>
           <div class="top-name">${s.name}</div>
           <div class="top-pct">${s.pct}%</div>
         </div>`).join('')}
+    </div>`;
+
+  // Sugerencias de carreras IPESfa
+  const seen = new Set();
+  const sugeridas = [];
+  top3.forEach(s => {
+    (IPESFA_MAP[s.id] || []).forEach(c => {
+      if (!seen.has(c.code)) {
+        seen.add(c.code);
+        sugeridas.push({ ...c, via: s.name });
+      }
+    });
+  });
+  document.getElementById('r-ipesfa').innerHTML = `
+    <div class="ipesfa-box">
+      <h3>Carreras IPESfa sugeridas</h3>
+      ${sugeridas.length
+        ? sugeridas.map(c => `
+          <div class="ipesfa-item">
+            <div class="ipesfa-code">${c.code}</div>
+            <div class="ipesfa-name">${c.name}</div>
+            <div class="ipesfa-via">${c.via}</div>
+          </div>`).join('')
+        : `<p class="ipesfa-none">Tus áreas de mayor interés no tienen coincidencia directa con los profesorados de IPESfa. Consultá con el orientador.</p>`
+      }
     </div>`;
 
   document.getElementById('r-bars').innerHTML = scores.map(s => `
